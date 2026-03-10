@@ -7,6 +7,7 @@ import {
   ApiFileUploadState,
 } from '@/features/files/api/types.ts'
 import { useUser } from '@/features/auth'
+import { useConfig } from '@/api/useConfig'
 
 type ListFilesResponse = {
   count: number
@@ -50,18 +51,19 @@ export const listMyFiles = async ({
     query.append('is_deleted', filters.is_deleted ? 'true' : 'false')
   }
 
-  return fetchApi<ListFilesResponse>(`/files?${query.toString()}`, {
+  return fetchApi<ListFilesResponse>(`/files/?${query.toString()}`, {
     method: 'GET',
   })
 }
 
 export const useListMyFiles = (params: Parameters<typeof listMyFiles>[0]) => {
   const { isLoggedIn } = useUser()
+  const { data: config } = useConfig()
   return useQuery({
     queryKey: [keys.files, params],
     queryFn: () => listMyFiles(params),
     refetchOnMount: 'always',
     placeholderData: keepPreviousData,
-    enabled: isLoggedIn,
+    enabled: isLoggedIn && config?.background_image?.upload_is_enabled,
   })
 }
